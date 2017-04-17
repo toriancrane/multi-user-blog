@@ -155,7 +155,6 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now = True)
     user_id = db.IntegerProperty(required=True)
-    #likes = db.IntegerProperty(default=0)
     user = db.StringProperty(required=True)
 
     #Put line breaks in post content
@@ -184,6 +183,25 @@ class Comment(db.Model):
     def all_by_post_id(cls, post_id):
         c = Comment.all().filter('post =', post_id).order('-created')
         return c
+
+#Database to store post likes
+# class Like(db.Model):
+#     post = db.ReferenceProperty(Blog, required=True)
+#     user = db.ReferenceProperty(User, required=True)
+
+#     # Number of likes by post id
+#     @classmethod
+#     def by_blog_id(cls, post_id):
+#         l = Like.all().filter('post =', post_id)
+#         return l.count()
+
+#     # Number of likes by post and user id
+#     @classmethod
+#     def check_like(cls, post_id, user_id):
+#         cl = Like.all().filter(
+#             'post =', post_id).filter(
+#             'user =', user_id)
+#         return cl.count()
 
 ########################################################
 
@@ -323,6 +341,19 @@ class ViewPostPage(MasterHandler):
         self.render("permalink.html", post=post,
                     comments_count=comments_count,
                     comments=comments)
+
+    def post(self, post_id):
+        post = Post.get_by_id(int(pid))
+
+        #Check is post belongs to user
+        if post.user_id == self.user.key().id():
+            error = "You cannot like your own post."
+            self.render("permalink.html", post=post,
+                    comments_count=comments_count,
+                    comments=comments, error=error)
+        #If not user post, check if user already liked
+
+        #If not liked...
 
 ##############    Edit Post Page    #############
 
