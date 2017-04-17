@@ -436,8 +436,8 @@ class EditComment(MasterHandler):
             self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
             self.redirect("/")
         else:
-            post = Post.get_by_id(int(pid))
-            comment = Comment.get_by_id(int(cid))
+            post = Post.get_by_id(int(post_id))
+            comment = Comment.get_by_id(int(comment_id))
             content = self.request.get("content")
 
             # Check that this comment was created by user
