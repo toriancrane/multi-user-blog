@@ -203,7 +203,7 @@ class FrontPage(MasterHandler):
         if self.user:
             self.render('dashboard.html', user = self.user.name, posts=posts)
         else:
-            self.redirect('/')
+            self.redirect('front.html')
 
 ##############    SignUp Page    #############
 
