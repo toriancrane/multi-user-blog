@@ -424,57 +424,46 @@ class NewComment(MasterHandler):
 
 class EditComment(MasterHandler):
     def get(self, post_id, comment_id):
-        key = db.Key.from_path('Post', int(post_id))
-        post = db.get(key)
-
-        #Retrieve comment information
-        comments = Comment.all_by_post_id(post_id)
-        comments_count = Comment.count_by_post_id(post_id)
-
-        # Check that user is valid
-        if not self.user:
-            self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-            self.redirect("/")
-        else:
+        if self.user:
             post = Post.get_by_id(int(post_id))
             comment = Comment.get_by_id(int(comment_id))
-            content = self.request.get("content")
 
-            # Check that this comment was created by user
-            if comment.user_id == self.user.key().id():
-                self.render("editcomment.html", content=content)
+            #Retrieve comment information
+            comments = Comment.all_by_post_id(post_id)
+            comments_count = Comment.count_by_post_id(post_id)
+
+            if comment and comment.commentor == self.user.name:
+                self.render("editcomment.html", comment=comment.comment)
             else:
                 error = "You cannot edit another users' comments."
                 self.render("permalink.html", post=post,
                     comments_count=comments_count,
                     comments=comments, error=error)
+        else:
+            self.redirect("/login")
 
     def post(self, post_id, comment_id):
-        comments = Comment.all_by_post_id(post_id)
-        comments_count = Comment.count_by_post_id(post_id)
-        content = self.request.get("content")
-
-        # Check that user is valid
-        if not self.user:
-            self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-            self.redirect("/")
-        else:
+        if self.user:
             post = Post.get_by_id(int(post_id))
             comment = Comment.get_by_id(int(comment_id))
 
-        if not content:
-            error = "You need some content to update a comment."
-            self.render("editcomment.html",
-                        error=error)
+            #Retrieve comment information
+            comments = Comment.all_by_post_id(post_id)
+            comments_count = Comment.count_by_post_id(post_id)
+
+            if comment.user_id == self.user.key().id():
+                comment_content = self.request.get("comment")
+                if comment_content:
+                    comment.comment = comment_content
+                    comment.put()
+                    self.redirect('/post/%s' % post_id)
+                else:
+                    error = "Please enter a comment."
+                    self.render(
+                        "editcomment.html",
+                        comment=comment.comment)
         else:
-            comment.comment = content
-            comment.post = post_id,
-            comment.user_id = self.user.key().id(),
-            comment.commentor = self.user.name
-            comment.put()
-            self.render("permalink.html", post=post,
-                    comments_count=comments_count,
-                    comments=comments)
+            self.redirect("/login")
 
 ##############    webapp2 Routes    #############
 
