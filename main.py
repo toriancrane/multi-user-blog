@@ -196,7 +196,14 @@ class Comment(db.Model):
 
 class FrontPage(MasterHandler):
     def get(self):
-        self.render("front.html")
+        # Retrieve all blog posts
+        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
+
+        #Validate user
+        if self.user:
+            self.render('dashboard.html', user = self.user.name, posts=posts)
+        else:
+            self.redirect('/front.html')
 
 ##############    SignUp Page    #############
 
