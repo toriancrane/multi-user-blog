@@ -22,34 +22,20 @@
     </nav>
 </header>
 <div class="container">
-    <div class="row">
-        
-        <div class="col-md-8 col-md-offset-2">
-            
-            <h1>Edit comment</h1>
-            
-            <form action="" method="POST">                
-                <div class="form-group">
-                    <label for="description">Comment <span class="require">*</span></label>
-                    <textarea rows="5" class="form-control" name="comment" value="{{comment}}">{{comment}}</textarea>
-                </div>
-                
-                <div class="form-group">
-                    <p><span class="require">*</span> - required fields</p>
-                </div>
-                
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">
-                        Submit
-                    </button>
-                        <a href="/dashboard" name="cancel" class="btn btn-default">Cancel</a>
-                </div>
-                {% if error %}
-                    <div class="alert alert-danger" role="alert">{{ error }}</div>
-                {% endif %}
-            </form>
-        </div>
-        
+    <div class="row">        
+        <div class="col-md-8 col-md-offset-2 text-center">
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+            <div>
+                <img class="img-fluid" src="https://vignette3.wikia.nocookie.net/criminal-case-grimsborough/images/b/b1/Delete_Icon.png" alt="Responsive image">
+                <br>
+                <br>
+            </div>
+            <div>
+                <a class="btn btn-large btn-info" href="/dashboard">
+                    Return to Dashboard
+                </a>
+            </div>
+        </div>        
     </div>
 </div>
 {% endblock %}

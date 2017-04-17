@@ -70,8 +70,8 @@
           {% for c in comments %}
           <div>
                 <div class="pull-right btn-group-xs">
-                    <a href="/post/{{post.key().id()}}/comment/{{comment.key().id()}}/edit" class="btn btn-default btn-xs"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</a>
-                    <a href="/post/{{post.key().id()}}/comment/{{comment.key().id()}}/delete"class="btn btn-default btn-xs"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</a>
+                    <a href="/post/{{post.key().id()}}/comment/{{c.key().id()}}/edit" class="btn btn-default btn-xs"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</a>
+                    <a href="/post/{{post.key().id()}}/comment/{{c.key().id()}}/delete" class="btn btn-default btn-xs"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</a>
                 </div>
           </div>
           <div class="post-content">

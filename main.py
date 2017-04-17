@@ -155,7 +155,7 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now = True)
     user_id = db.IntegerProperty(required=True)
-    # likes = db.IntegerProperty(default=0)
+    #likes = db.IntegerProperty(default=0)
     user = db.StringProperty(required=True)
 
     #Put line breaks in post content
@@ -184,17 +184,6 @@ class Comment(db.Model):
     def all_by_post_id(cls, post_id):
         c = Comment.all().filter('post =', post_id).order('-created')
         return c
-
-# #Database to store post likes
-# class Like(db.Model):
-
-#   user_id = db.IntegerProperty(required=True)
-#     post_id = db.IntegerProperty(required=True)
-
-#     def getUserName(self):
-#         user = User.by_id(self.user_id)
-#         return user.name
-
 
 ########################################################
 
@@ -432,7 +421,7 @@ class EditComment(MasterHandler):
             comments = Comment.all_by_post_id(post_id)
             comments_count = Comment.count_by_post_id(post_id)
 
-            if comment and comment.commentor == self.user.name:
+            if comment and comment.user_id == self.user.key().id():
                 self.render("editcomment.html", comment=comment.comment)
             else:
                 error = "You cannot edit another users' comments."
@@ -456,6 +445,7 @@ class EditComment(MasterHandler):
                 if comment_content:
                     comment.comment = comment_content
                     comment.put()
+                    time.sleep(0.1)
                     self.redirect('/post/%s' % post_id)
                 else:
                     error = "Please enter a comment."
@@ -464,6 +454,33 @@ class EditComment(MasterHandler):
                         comment=comment.comment)
         else:
             self.redirect("/login")
+
+##############    Delete Comment    #############
+class DeleteComment(MasterHandler):
+    def get(self, post_id, comment_id):
+        if self.user:
+            post = Post.get_by_id(int(post_id))
+            comment = Comment.get_by_id(int(comment_id))
+
+            #Retrieve comment information
+            comments = Comment.all_by_post_id(post_id)
+            comments_count = Comment.count_by_post_id(post_id)
+
+            if comment.user_id == self.user.key().id():
+                comment.delete()
+                error = "Your comment has been deleted."
+                self.render("deletecomment.html", error=error)
+            else:
+                error = "You can only delete your own comment."
+                self.render("permalink.html", post=post,
+                    comments_count=comments_count,
+                    comments=comments, error=error)
+        else:
+            self.redirect("/login")
+
+##############    Likes Handler    #############
+
+##############    Unlike Handler    #############
 
 ##############    webapp2 Routes    #############
 
@@ -478,6 +495,6 @@ app = webapp2.WSGIApplication([
     ("/post/edit/([0-9]+)", EditPostPage),
     ("/post/delete/([0-9]+)", DeletePostPage),
     ("/post/([0-9]+)/newcomment", NewComment),
-    ("/post/([0-9]+)/comment/([0-9]+)/edit", EditComment)
-    #("/post/(.*)/comment/(.*)/delete", DeleteCommentPage)
+    ("/post/([0-9]+)/comment/([0-9]+)/edit", EditComment),
+    ("/post/([0-9]+)/comment/([0-9]+)/delete", DeleteComment)
 ], debug=True)
