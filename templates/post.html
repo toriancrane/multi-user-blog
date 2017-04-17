@@ -1,7 +1,7 @@
 <div class="post">
     <div class="panel panel-default">
         <div class="panel-body">
-            <h4><a href="#" style="text-decoration:none;"><strong>{{p.title}}</strong></a> – <small><small><a href="#" style="text-decoration:none; color:grey;"><i><i class="fa fa-clock-o" aria-hidden="true"></i>{{p.user}} ({{p.created.strftime("%b %d, %Y")}})</i></a></small></small></h4>
+            <h4><a href="/post/{{ p.key().id() }}" style="text-decoration:none;"><strong>{{p.title}}</strong></a> – <small><small><a href="#" style="text-decoration:none; color:grey;"><i><i class="fa fa-clock-o" aria-hidden="true"></i>{{p.user}} ({{p.created.strftime("%b %d, %Y")}})</i></a></small></small></h4>
             <div>
                 <div class="pull-right btn-group-xs">
                     <a href="/post/edit/{{p.key().id()}}" class="btn btn-default btn-xs"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</a>
@@ -13,55 +13,6 @@
             <div class="post-content">
                 {{p._render_text | safe}}
             </div>
-
-            <!--<hr>
-
-            <div>
-                <div class="pull-right">
-                    <form method="post" role="form">
-                        <input type="hidden" class="form-control" id="like" name="like" value="update">
-                        <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-heart" aria-hidden="true"></i> Like <span class="badge">42<!--{{num_likes}}--><!--</span></button>
-                  <!--  </form>
-                </div>
-
-                <br>
-            </div>
-            
-            <hr>
-
-            <!--<div>
-                <a href="#"class="btn btn-default btn-xs"><i class="fa fa-bars" aria-hidden="true"></i> Show all comments</a>
-               <!-- {% for c in comments %}-->
-                <!--<div class="post-content">
-                    <div class="panel-default">
-                        <div class="panel-body">
-                            <div class="pull-left">
-                                <a href="#">
-                                    <img class="media-object img-circle" src="https://diaspote.org/uploads/images/thumb_large_283df6397c4db3fe0344.png" width="35px" height="35px" style="margin-right:8px; margin-top:-5px;">
-                                </a>
-                            </div>
-                            <h4><a href="#" style="text-decoration:none;"><strong><!--{{commentor}}--><!--</strong></a></h4>
-                            <!--<hr>
-                            <div class="post-content">
-                                <!--{{c.comment}}-->
-                               <!-- <br><small><small><a href="#" style="text-decoration:none; color:grey;"><i><i class="fa fa-clock-o" aria-hidden="true"></i><!--{{c.created}}--><!--</i></a></small></small>
-                           <!-- </div>
-                        </div>
-                    </div>
-                </div>
-                <!--{% endfor %}-->
-              <!--  <hr>
-            </div>
-            <div class="media">
-                <div class="media-body">
-                    <form method="POST">
-                        <textarea class="form-control" rows="1" placeholder="Comment" name="comment"></textarea>
-                        <br>
-                        <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-comment" aria-hidden="true"></i> Post Comment</button>
-                    </form>
-                    
-                </div>
-            </div>-->
         </div>
     </div>    
 </div>

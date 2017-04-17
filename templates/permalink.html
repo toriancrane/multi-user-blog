@@ -23,15 +23,68 @@
 </header>
 
 <div class="container">
+  <div class="row">
+      <div class="col-md-4"></div>
+      <div class="col-md-4">
+          {% if error %}
+              <div class="alert alert-danger" role="alert">{{ error }}</div>
+          {% endif %}
+      </div>
+      <div class="col-md-4"></div>
+  </div>
 	<div class="row">
 		<div class="col-md-2"></div>
 		<div class="col-md-8">
 			
   			{{post.render() | safe}}
-			
-		</div>
-		<div class="col-md-2"></div>
-		
+
+        <div>
+          <div class="pull-right">
+              <form method="post" role="form">
+                  <input type="hidden" class="form-control" id="like" name="like" value="update">
+                  <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-heart" aria-hidden="true"></i> Like <span class="badge">42<!--{{num_likes}}--></span></button>
+              </form>
+          </div>
+
+          <br>
+        </div>
+
+        <hr>
+
+        <div class="media-body">
+            <form action="/post/{{ post.key().id() }}/newcomment" method="POST">
+                <textarea class="form-control" rows="1" placeholder="Comment" name="comment"></textarea>
+                <br>
+                <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-comment" aria-hidden="true"></i> Post Comment</button>
+            </form>            
+        </div>
+        <br>
+        <br>
+        <div>
+          {% if comments_count == 1 %}
+              <label>{{comments_count}} comment</label>
+          {% else %}
+              <label>{{comments_count}} comments</label>
+          {% endif %}
+
+          {% for c in comments %}
+          <div>
+                <div class="pull-right btn-group-xs">
+                    <a href="/post/{{post.key().id()}}/comment/{{comment.key().id()}}/edit" class="btn btn-default btn-xs"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</a>
+                    <a href="/post/{{post.key().id()}}/comment/{{comment.key().id()}}/delete"class="btn btn-default btn-xs"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</a>
+                </div>
+          </div>
+          <div class="post-content">
+              <hr>  
+              {{c.comment}}
+              <br>
+              <br>
+              <small><small><a href="#" style="text-decoration:none; color:grey;"><i><i class="fa fa-clock-o" aria-hidden="true"></i>By {{c.commentor}} on {{c.created.strftime("%b %d, %Y")}}</i></a></small></small>
+          </div>
+          {% endfor %}        
+        </div>
+    </div>
+		<div class="col-md-2"></div>		
 	</div>
 	
 </div>

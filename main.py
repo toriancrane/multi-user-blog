@@ -169,10 +169,21 @@ class Comment(db.Model):
     comment = db.StringProperty(required=True)
     post = db.StringProperty(required=True)
     commentor = db.StringProperty(required=True)
+    user_id = db.IntegerProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    last_modified = db.DateTimeProperty(auto_now = True)
 
-    # @classmethod
-    # def render(self):
-    #     self.render("comment.html")
+    # Number of comments for post
+    @classmethod
+    def count_by_post_id(cls, post_id):
+        c = Comment.all().filter('post =', post_id)
+        return c.count()
+
+    # All comments for post
+    @classmethod
+    def all_by_post_id(cls, post_id):
+        c = Comment.all().filter('post =', post_id).order('-created')
+        return c
 
 # #Database to store post likes
 # class Like(db.Model):
@@ -203,7 +214,7 @@ class FrontPage(MasterHandler):
         if self.user:
             self.render('dashboard.html', user = self.user.name, posts=posts)
         else:
-            self.redirect('front.html')
+            self.render('front.html')
 
 ##############    SignUp Page    #############
 
@@ -275,23 +286,6 @@ class DashboardPage(MasterHandler):
         else:
             self.redirect('/login')
 
-    def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id))
-        post = db.get(key)
-        if not post:
-            self.error(404)
-            return
-        
-        comment = self.request.get('comment')
-
-        if comment:
-            commentor = self.user.name
-            c = Comment(comment=comment, post=post_id,
-                        commentor = commentor)
-            c.put()
-
-            self.redirect('/dashboard')
-
 ##############    Logout Page    #############
 
 class LogOutPage(MasterHandler):
@@ -330,7 +324,16 @@ class ViewPostPage(MasterHandler):
         if not post:
             return self.error(404)
 
-        self.render("permalink.html", post=post)
+        #Retrieve comment information
+        comments = Comment.all_by_post_id(post_id)
+        comments_count = Comment.count_by_post_id(post_id)
+
+        if not post:
+            return self.error(404)
+
+        self.render("permalink.html", post=post,
+                    comments_count=comments_count,
+                    comments=comments)
 
 ##############    Edit Post Page    #############
 
@@ -368,7 +371,7 @@ class EditPostPage(MasterHandler):
             post.put()
             self.redirect('/post/%s' % post_id)
         else:
-            error = "You need both a title and some content to create a new post."
+            error = "You need both a title and some content to update a post."
             self.render("editpost.html", title=title,
                         content=content, error=error)
 
@@ -395,6 +398,84 @@ class DeletePostPage(MasterHandler):
             self.redirect("/login?error=You need to be logged, in order" +
                           " to delete your post!!")
 
+##############    New Comment Page    #############
+
+class NewComment(MasterHandler):
+    def post (self, post_id):
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
+        
+        comment = self.request.get('comment')
+
+        if comment:
+            c = Comment(comment=comment, post=post_id,
+                        user_id = self.user.key().id(),
+                        commentor = self.user.name)
+            c.put()
+
+            #A fix for datastore's Eventual Consistency
+            time.sleep(0.1)
+            self.redirect('/post/%s' % post_id)
+
+##############    Edit Comment Page    #############
+
+class EditComment(MasterHandler):
+    def get(self, post_id, comment_id):
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+
+        #Retrieve comment information
+        comments = Comment.all_by_post_id(post_id)
+        comments_count = Comment.count_by_post_id(post_id)
+
+        # Check that user is valid
+        if not self.user:
+            self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+            self.redirect("/")
+        else:
+            post = Post.get_by_id(int(pid))
+            comment = Comment.get_by_id(int(cid))
+            content = self.request.get("content")
+
+            # Check that this comment was created by user
+            if comment.user_id == self.user.key().id():
+                self.render("editcomment.html", content=content)
+            else:
+                error = "You cannot edit another users' comments."
+                self.render("permalink.html", post=post,
+                    comments_count=comments_count,
+                    comments=comments, error=error)
+
+    def post(self, post_id, comment_id):
+        comments = Comment.all_by_post_id(post_id)
+        comments_count = Comment.count_by_post_id(post_id)
+        content = self.request.get("content")
+
+        # Check that user is valid
+        if not self.user:
+            self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+            self.redirect("/")
+        else:
+            post = Post.get_by_id(int(post_id))
+            comment = Comment.get_by_id(int(comment_id))
+
+        if not content:
+            error = "You need some content to update a comment."
+            self.render("editcomment.html",
+                        error=error)
+        else:
+            comment.comment = content
+            comment.post = post_id,
+            comment.user_id = self.user.key().id(),
+            comment.commentor = self.user.name
+            comment.put()
+            self.render("permalink.html", post=post,
+                    comments_count=comments_count,
+                    comments=comments)
+
 ##############    webapp2 Routes    #############
 
 app = webapp2.WSGIApplication([
@@ -406,9 +487,8 @@ app = webapp2.WSGIApplication([
     ("/newpost", NewPostPage),
     ("/post/([0-9]+)", ViewPostPage),   
     ("/post/edit/([0-9]+)", EditPostPage),
-    ("/post/delete/([0-9]+)", DeletePostPage)
-    #("/post/(.*)/comment/(.*)", ViewCommentPage),
-    #("/post/(.*)/comment", CreateCommentPage),
-    #("/post/(.*)/comment/(.*)/edit", EditCommentPage),
+    ("/post/delete/([0-9]+)", DeletePostPage),
+    ("/post/([0-9]+)/newcomment", NewComment),
+    ("/post/([0-9]+)/comment/([0-9]+)/edit", EditComment)
     #("/post/(.*)/comment/(.*)/delete", DeleteCommentPage)
 ], debug=True)
