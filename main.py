@@ -163,18 +163,16 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p=self)
 
-# #Database to store post comments
-# class Comment(db.Model):
+#Database to store post comments
+class Comment(db.Model):
 
-#     comment = db.TextProperty(required=True)
-#     created = db.DateTimeProperty(auto_now_add=True)
-#     last_modified = db.DateTimeProperty(auto_now=True)
-#     user_id = db.IntegerProperty(required=True)
-#     post_id = db.IntegerProperty(required=True)
+    comment = db.StringProperty(required=True)
+    post = db.StringProperty(required=True)
+    commentor = db.StringProperty(required=True)
 
-#     def getUserName(self):
-#         user = User.by_id(self.user_id)
-#         return user.name
+    # @classmethod
+    # def render(self):
+    #     self.render("comment.html")
 
 # #Database to store post likes
 # class Like(db.Model):
@@ -269,6 +267,23 @@ class DashboardPage(MasterHandler):
             self.render('dashboard.html', user = self.user.name, posts=posts)
         else:
             self.redirect('/login')
+
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
+        
+        comment = self.request.get('comment')
+
+        if comment:
+            commentor = self.user.name
+            c = Comment(comment=comment, post=post_id,
+                        commentor = commentor)
+            c.put()
+
+            self.redirect('/dashboard')
 
 ##############    Logout Page    #############
 
@@ -372,7 +387,6 @@ class DeletePostPage(MasterHandler):
         else:
             self.redirect("/login?error=You need to be logged, in order" +
                           " to delete your post!!")
-
 
 ##############    webapp2 Routes    #############
 
