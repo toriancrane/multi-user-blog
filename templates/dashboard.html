@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+
+</style>
+
+<header>
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              </button>
+              <a class="navbar-brand" href="/">iBlog</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">             
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="/dashboard">Dashboard<i class="fa fa-area-chart" aria-hidden="true"></i></a></li>
+                <li><a href="/logout">Logout<i class="fa fa-sign-out" aria-hidden="true"></i></a></li>
+              </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            {% if error %}
+                <div class="alert alert-danger" role="alert">{{ error }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+    <div class="row">
+        <div style="padding-top:25px;"> </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <div class="panel panel-default post-panel">
+                <div class="panel-body">
+                    <span>
+                        <h1 class="panel-title pull-left" style="font-size:30px;">Welcome <small>{{user}}</small></h1>
+                        <div class="dropdown pull-right">
+                          <a href="/newpost">
+                            <button class="btn btn-success" type="button">
+                                <i class="fa fa-plus" aria-hidden="true"></i>Create New Blog Post
+                            </button>
+                          </a>
+                        </div>
+                    </span>
+                    <br><br><hr>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+            
+    <div class="row">
+        <div class="col-md-12">
+            <hr style="width: 80%;">
+        </div>      
+    </div>
+
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+        {% for p in posts %}
+            {{p.render() | safe}}
+            <br>
+        {% endfor %}
+        </div>
+        <div class="col-md-1"></div>
+
+    </div>
+</div>
+{% endblock %}

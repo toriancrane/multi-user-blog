@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              </button>
+              <a class="navbar-brand" href="/">iBlog</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">             
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="/dashboard">Dashboard<i class="fa fa-area-chart" aria-hidden="true"></i></a></li>
+                <li><a href="/logout">Logout<i class="fa fa-sign-out" aria-hidden="true"></i></a></li>
+              </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+</header>
+<div class="container">
+    <div class="row">        
+        <div class="col-md-8 col-md-offset-2 text-center">
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+            <div>
+                <img class="img-fluid" src="https://vignette3.wikia.nocookie.net/criminal-case-grimsborough/images/b/b1/Delete_Icon.png" alt="Responsive image">
+                <br>
+                <br>
+            </div>
+            <div>
+                <a class="btn btn-large btn-info" href="/dashboard">
+                    Return to Dashboard
+                </a>
+            </div>
+        </div>        
+    </div>
+</div>
+{% endblock %}

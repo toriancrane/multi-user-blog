@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              </button>
+              <a class="navbar-brand" href="/">iBlog</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">             
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="/dashboard">Dashboard<i class="fa fa-area-chart" aria-hidden="true"></i></a></li>
+                <li><a href="/logout">Logout<i class="fa fa-sign-out" aria-hidden="true"></i></a></li>
+              </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+</header>
+<div class="container">
+    <div class="row">
+        
+        <div class="col-md-8 col-md-offset-2">
+            
+            <h1>Create post</h1>
+            
+            <form action="" method="POST">
+                <div class="form-group">
+                    <label for="title">Title <span class="require">*</span></label>
+                    <input type="text" class="form-control" name="title" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Post Content <span class="require">*</span></label>
+                    <textarea rows="5" class="form-control" name="content" ></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <p><span class="require">*</span> - required fields</p>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        Create
+                    </button>
+                    <button class="btn btn-default">
+                        <a href="/dashboard">Cancel</a>
+                    </button>
+                </div>
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">{{ error }}</div>
+                {% endif %}
+            </form>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
