@@ -502,7 +502,7 @@ class LikeComment(MasterHandler):
         post = Post.get_by_id(int(post_id))
         user = self.user.key().id()
         if not post.user_id == user:
-            like = db.GqlQuery("SELECT * FROM Like WHERE post_id= " + post_id + " AND user_id=" + user)
+            like = db.GqlQuery("SELECT * FROM Like WHERE post_id=:post_id  AND user_id=:user", post_id=int(post_id), user=user)
             if(like.get()):
                 like[0].delete()
                 post.likes = post.likes - 1
