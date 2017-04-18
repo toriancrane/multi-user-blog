@@ -156,6 +156,7 @@ class Post(db.Model):
     last_modified = db.DateTimeProperty(auto_now = True)
     user_id = db.IntegerProperty(required=True)
     user = db.StringProperty(required=True)
+    likes = db.IntegerProperty(default = 0)
 
     #Put line breaks in post content
     def render(self):
@@ -171,7 +172,7 @@ class Comment(db.Model):
     user_id = db.IntegerProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now = True)
-
+    
     # Number of comments for post
     @classmethod
     def count_by_post_id(cls, post_id):
@@ -185,23 +186,9 @@ class Comment(db.Model):
         return c
 
 #Database to store post likes
-# class Like(db.Model):
-#     post = db.ReferenceProperty(Blog, required=True)
-#     user = db.ReferenceProperty(User, required=True)
-
-#     # Number of likes by post id
-#     @classmethod
-#     def by_blog_id(cls, post_id):
-#         l = Like.all().filter('post =', post_id)
-#         return l.count()
-
-#     # Number of likes by post and user id
-#     @classmethod
-#     def check_like(cls, post_id, user_id):
-#         cl = Like.all().filter(
-#             'post =', post_id).filter(
-#             'user =', user_id)
-#         return cl.count()
+class Like(db.Model):
+    post_id = db.IntegerProperty(required = True)
+    user_id = db.IntegerProperty(required=True)
 
 ########################################################
 
@@ -343,7 +330,7 @@ class ViewPostPage(MasterHandler):
                     comments=comments)
 
     def post(self, post_id):
-        post = Post.get_by_id(int(pid))
+        post = Post.get_by_id(int(post_id))
 
         #Check is post belongs to user
         if post.user_id == self.user.key().id():
@@ -510,8 +497,26 @@ class DeleteComment(MasterHandler):
             self.redirect("/login")
 
 ##############    Likes Handler    #############
-
-##############    Unlike Handler    #############
+class LikeComment(MasterHandler):
+    def get(self, post_id):
+        post = Post.get_by_id(int(post_id))
+        user = self.user.key().id()
+        if not post.user_id == user:
+            like = db.GqlQuery("SELECT * FROM Like WHERE post_id= " + post_id + " AND user_id=" + user)
+            if(like.get()):
+                like[0].delete()
+                post.likes = post.likes - 1
+                post.put()
+                self.redirect("/posts/" + id)
+            else:
+                like = Like(post_id = post_id, user_id= user)
+                like.put()
+                post.likes = post.likes + 1
+                post.put()
+                self.redirect('/post/%s' % post_id)
+        else:
+            error = "You cannot like your own post."
+            self.render("permalink.html", error = error)
 
 ##############    webapp2 Routes    #############
 
@@ -525,6 +530,7 @@ app = webapp2.WSGIApplication([
     ("/post/([0-9]+)", ViewPostPage),   
     ("/post/edit/([0-9]+)", EditPostPage),
     ("/post/delete/([0-9]+)", DeletePostPage),
+    ("/post/([0-9]+)/like", LikeComment),
     ("/post/([0-9]+)/newcomment", NewComment),
     ("/post/([0-9]+)/comment/([0-9]+)/edit", EditComment),
     ("/post/([0-9]+)/comment/([0-9]+)/delete", DeleteComment)
