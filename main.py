@@ -502,14 +502,14 @@ class LikeComment(MasterHandler):
         post = Post.get_by_id(int(post_id))
         user = self.user.key().id()
         if not post.user_id == user:
-            like = db.GqlQuery("SELECT * FROM Like WHERE post_id=:post_id  AND user_id=:user", post_id=int(post_id), user=user)
+            like  = Like.all().filter('post_id =', int(post_id)).filter('user_id =', user)
             if(like.get()):
                 like[0].delete()
                 post.likes = post.likes - 1
                 post.put()
-                self.redirect("/posts/" + id)
+                self.redirect('/post/%s' % post_id)
             else:
-                like = Like(post_id = post_id, user_id= user)
+                like = Like(post_id = int(post_id), user_id= user)
                 like.put()
                 post.likes = post.likes + 1
                 post.put()
