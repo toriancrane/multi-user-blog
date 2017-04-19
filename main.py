@@ -56,6 +56,19 @@ def validate_pw(email, pw, h):
     salt = h.split('|')[0]
     return h == create_pw_hash(email, pw, salt)
 
+#####   User Login Decorator    #####
+def login_required(func):
+    """
+    A decorator to confirm a user is logged in or redirect as needed.
+    """
+    def login(self, *args, **kwargs):
+        # Redirect to login if user not logged in, else execute func.
+        if not self.user:
+            self.redirect("/login")
+        else:
+            func(self, *args, **kwargs)
+    return login
+
 ########################################################
 
 #################### Master Handler ####################
@@ -270,15 +283,11 @@ class LoginPage(MasterHandler):
 
 class DashboardPage(MasterHandler):
     """ Dashboard page handler """
+    @login_required
     def get(self):
         # Retrieve all blog posts
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
-
-        #Validate user
-        if self.user:
-            self.render('dashboard.html', user = self.user.name, posts=posts)
-        else:
-            self.redirect('/login')
+        self.render('dashboard.html', user = self.user.name, posts=posts)
 
 ##############    Logout Page    #############
 
@@ -292,12 +301,11 @@ class LogOutPage(MasterHandler):
 
 class NewPostPage(MasterHandler):
     """ New Post page handler """
+    @login_required
     def get(self):
-        if self.user:
-            self.render('newpost.html')
-        else:
-            self.redirect('/login')
+        self.render('newpost.html')
 
+    @login_required
     def post(self):
         title = self.request.get('title')
         content = self.request.get('content')
@@ -317,6 +325,7 @@ class NewPostPage(MasterHandler):
 
 class ViewPostPage(MasterHandler):
     """ View Post page handler """
+    @login_required
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id))
         post = db.get(key)
@@ -335,6 +344,7 @@ class ViewPostPage(MasterHandler):
                     comments_count=comments_count,
                     comments=comments)
 
+    @login_required
     def post(self, post_id):
         post = Post.get_by_id(int(post_id))
 
@@ -352,31 +362,29 @@ class ViewPostPage(MasterHandler):
 
 class EditPostPage(MasterHandler):
     """ Edit Post page handler """
+    @login_required
     def get(self, post_id):
 
         # Retrieve all blog posts
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
 
-        if self.user:
-            key = db.Key.from_path('Post', int(post_id))
-            post = db.get(key)
-            if post.user_id == self.user.key().id():
-                self.render("editpost.html", title=post.title,
-                            content=post.content)
-            else:
-                error = "You do not have access to edit this post."
-                self.render("dashboard.html", user = self.user.name,
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        if post.user_id == self.user.key().id():
+            self.render("editpost.html", title=post.title,
+                        content=post.content)
+        else:
+            error = "You do not have access to edit this post."
+            self.render("dashboard.html", user = self.user.name,
                     posts=posts, error=error)
 
-
+    @login_required
     def post(self, post_id):
-
-        if not self.user:
-            self.redirect('/login')
-            return
-
         title = self.request.get('title')
         content = self.request.get('content')
+
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
 
         if post.user_id == self.user.key().id():
             if title and content:
@@ -404,121 +412,113 @@ class EditPostPage(MasterHandler):
 
 class DeletePostPage(MasterHandler):
     """ Delete Post page handler """
+    @login_required
     def get(self, post_id):
 
         # Retrieve all blog posts
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
 
-        if self.user:
-            key = db.Key.from_path('Post', int(post_id))
-            post = db.get(key)
-            if post is not None:
-                if post.user_id == self.user.key().id():
-                    post.delete()
-                    error = "Your post has been deleted."
-                    self.render("deletepost.html", error=error)
-                else:
-                    error = "You do not have access to delete this post."
-                    self.render("dashboard.html", user = self.user.name,
-                        posts=posts, error=error)
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        if post is not None:
+            if post.user_id == self.user.key().id():
+                post.delete()
+                error = "Your post has been deleted."
+                self.render("deletepost.html", error=error)
             else:
-                error = "This post does not exist."
+                error = "You do not have access to delete this post."
                 self.render("dashboard.html", user = self.user.name,
                     posts=posts, error=error)
         else:
-            self.redirect("/login?error=You need to be logged, in order" +
-                          " to delete your post!!")
+            error = "This post does not exist."
+            self.render("dashboard.html", user = self.user.name,
+                posts=posts, error=error)
 
 ##############    New Comment Page    #############
 
 class NewComment(MasterHandler):
     """ New Comment handler """
+    @login_required
     def post (self, post_id):
-        if self.user:
-            key = db.Key.from_path('Post', int(post_id))
-            post = db.get(key)
-            if not post:
-                self.error(404)
-                return
-            
-            comment = self.request.get('comment')
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
+        
+        comment = self.request.get('comment')
 
-            if comment:
-                c = Comment(comment=comment, post=post_id,
-                            user_id = self.user.key().id(),
-                            commentor = self.user.name)
-                c.put()
+        if comment:
+            c = Comment(comment=comment, post=post_id,
+                        user_id = self.user.key().id(),
+                        commentor = self.user.name)
+            c.put()
 
-                #A fix for datastore's Eventual Consistency
-                time.sleep(0.1)
-                self.redirect('/post/%s' % post_id)
-        else:
-            self.redirect('/login')
+            #A fix for datastore's Eventual Consistency
+            time.sleep(0.1)
+            self.redirect('/post/%s' % post_id)
 
 ##############    Edit Comment Page    #############
 
 class EditComment(MasterHandler):
     """ Edit Comment handler """
+    @login_required
     def get(self, post_id, comment_id):
-        if self.user:
-            post = Post.get_by_id(int(post_id))
-            comment = Comment.get_by_id(int(comment_id))
+        post = Post.get_by_id(int(post_id))
+        comment = Comment.get_by_id(int(comment_id))
 
+        #Retrieve comment information
+        comments = Comment.all_by_post_id(post_id)
+        comments_count = Comment.count_by_post_id(post_id)
+
+        if comment and comment.user_id == self.user.key().id():
+            self.render("editcomment.html", comment=comment.comment)
+        else:
+            error = "You cannot edit another users' comments."
+            self.render("permalink.html", post=post,
+                comments_count=comments_count,
+                comments=comments, error=error)
+
+    @login_required
+    def post(self, post_id, comment_id):
+        post = Post.get_by_id(int(post_id))
+        comment = Comment.get_by_id(int(comment_id))
+        if comment:
             #Retrieve comment information
             comments = Comment.all_by_post_id(post_id)
             comments_count = Comment.count_by_post_id(post_id)
 
-            if comment and comment.user_id == self.user.key().id():
-                self.render("editcomment.html", comment=comment.comment)
-            else:
-                error = "You cannot edit another users' comments."
-                self.render("permalink.html", post=post,
+            if comment.user_id == self.user.key().id():
+                comment_content = self.request.get("comment")
+                if comment_content:
+                    comment.comment = comment_content
+                    comment.put()
+                    time.sleep(0.1)
+                    self.redirect('/post/%s' % post_id)
+                else:
+                    error = "Please enter a comment."
+                    self.render(
+                        "editcomment.html",
+                    comment=comment.comment)
+        else:
+            error = "This comment does not exist."
+            self.render("permalink.html", post=post,
                     comments_count=comments_count,
                     comments=comments, error=error)
-        else:
-            self.redirect("/login")
-
-    def post(self, post_id, comment_id):
-        if self.user:
-            post = Post.get_by_id(int(post_id))
-            comment = Comment.get_by_id(int(comment_id))
-            if comment:
-                #Retrieve comment information
-                comments = Comment.all_by_post_id(post_id)
-                comments_count = Comment.count_by_post_id(post_id)
-
-                if comment.user_id == self.user.key().id():
-                    comment_content = self.request.get("comment")
-                    if comment_content:
-                        comment.comment = comment_content
-                        comment.put()
-                        time.sleep(0.1)
-                        self.redirect('/post/%s' % post_id)
-                    else:
-                        error = "Please enter a comment."
-                        self.render(
-                            "editcomment.html",
-                        comment=comment.comment)
-            else:
-                error = "This comment does not exist."
-                self.render("permalink.html", post=post,
-                        comments_count=comments_count,
-                        comments=comments, error=error)
-        else:
-            self.redirect("/login")
 
 ##############    Delete Comment    #############
 class DeleteComment(MasterHandler):
     """ Delete Comment handler """
+    @login_required
     def get(self, post_id, comment_id):
-        if self.user:
-            post = Post.get_by_id(int(post_id))
-            comment = Comment.get_by_id(int(comment_id))
+        post = Post.get_by_id(int(post_id))
+        comment = Comment.get_by_id(int(comment_id))
 
-            #Retrieve comment information
-            comments = Comment.all_by_post_id(post_id)
-            comments_count = Comment.count_by_post_id(post_id)
+        #Retrieve comment information
+        comments = Comment.all_by_post_id(post_id)
+        comments_count = Comment.count_by_post_id(post_id)
 
+        if comment:
             if comment.user_id == self.user.key().id():
                 comment.delete()
                 error = "Your comment has been deleted."
@@ -529,31 +529,40 @@ class DeleteComment(MasterHandler):
                     comments_count=comments_count,
                     comments=comments, error=error)
         else:
-            self.redirect("/login")
+            error = "This comment does not exist."
+            self.render("permalink.html", post=post,
+                    comments_count=comments_count,
+                    comments=comments, error=error)
 
 ##############    Likes Handler    #############
 class LikePost(MasterHandler):
     """ Like Comment handler """
+    @login_required
     def get(self, post_id):
         post = Post.get_by_id(int(post_id))
         user = self.user.key().id()
-        if not post.user_id == user:
-            like  = Like.all().filter(
-                'post_id =', int(post_id)).filter('user_id =', user)
-            if(like.get()):
-                like[0].delete()
-                post.likes = post.likes - 1
-                post.put()
-                self.redirect('/post/%s' % post_id)
+        if post:
+            if not post.user_id == user:
+                like  = Like.all().filter(
+                    'post_id =', int(post_id)).filter('user_id =', user)
+                if(like.get()):
+                    like[0].delete()
+                    post.likes = post.likes - 1
+                    post.put()
+                    self.redirect('/post/%s' % post_id)
+                else:
+                    like = Like(post_id = int(post_id), user_id= user)
+                    like.put()
+                    post.likes = post.likes + 1
+                    post.put()
+                    self.redirect('/post/%s' % post_id)
             else:
-                like = Like(post_id = int(post_id), user_id= user)
-                like.put()
-                post.likes = post.likes + 1
-                post.put()
-                self.redirect('/post/%s' % post_id)
+                error = "You cannot like your own post."
+                self.render("permalink.html", post = post, error = error)
         else:
-            error = "You cannot like your own post."
-            self.render("permalink.html", error = error)
+            error = "This post does not exist."
+            self.render("dashboard.html", user = self.user.name,
+                posts=posts, error=error)
 
 ##############    webapp2 Routes    #############
 
