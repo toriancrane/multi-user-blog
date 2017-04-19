@@ -1,5 +1,12 @@
+<style>
+.panel-body{
+  background-color: ;
+}
+
+</style>
+
 <div class="post">
-    <div class="panel panel-default">
+    <div class="panel panel-default" style="box-shadow: 0px 2px 25px rgba(0, 0, 0, .25);">
         <div class="panel-body">
             <h4><a href="/post/{{ p.key().id() }}" style="text-decoration:none;"><strong>{{p.title}}</strong></a> – <small><small><a href="#" style="text-decoration:none; color:grey;"><i><i class="fa fa-clock-o" aria-hidden="true"></i>{{p.user}} ({{p.created.strftime("%b %d, %Y")}})</i></a></small></small></h4>
             <div>
