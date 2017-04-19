@@ -16,7 +16,8 @@ from google.appengine.ext import db
 ########################################################
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
+jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
+                            autoescape = True)
 
 #Retrieved from grc.com
 secret = "wGuA4zMzr465NsBeDSfpF5u3CC1LsD8JYJiVrsCOpWookykZzMVtV5BHX1g9Ta6"
@@ -41,7 +42,8 @@ def check_secure_val(secure_val):
 
 # Create random salt
 def create_salt():
-    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(9))    
+    return ''.join(random.SystemRandom().choice(
+        string.ascii_uppercase + string.digits) for _ in range(9))    
 
 # Create password hash
 def create_pw_hash(email, pw, salt = None):
@@ -304,7 +306,7 @@ class NewPostPage(MasterHandler):
             p.put()
             self.redirect('/post/%s' % str(p.key().id()))
         else:
-            error = "You need both a title and some content to create a new post."
+            error = "You need a title and some content to make a new post."
             self.render("newpost.html", title=title, 
                         content=content, error=error)
 
@@ -502,7 +504,8 @@ class LikeComment(MasterHandler):
         post = Post.get_by_id(int(post_id))
         user = self.user.key().id()
         if not post.user_id == user:
-            like  = Like.all().filter('post_id =', int(post_id)).filter('user_id =', user)
+            like  = Like.all().filter(
+                'post_id =', int(post_id)).filter('user_id =', user)
             if(like.get()):
                 like[0].delete()
                 post.likes = post.likes - 1
